@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AirWatch — Biratnagar-Itahari Corridor</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- PARTICLE BACKGROUND -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- TOP ALERT BANNER -->
+  <div class="alert-banner" id="alertBanner">
+    <div class="alert-inner">
+      <span class="alert-dot pulse-red"></span>
+      <span class="alert-text">⚠ CRITICAL: PM2.5 levels at Khanar Zone-3 have exceeded 280 µg/m³ — 11× WHO safe limit. Midnight discharge suspected. <strong>3 neighbours have reported odour in last 12 min.</strong></span>
+      <button class="alert-dismiss" onclick="document.getElementById('alertBanner').style.display='none'">✕</button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR NAV -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="18" stroke="var(--accent)" stroke-width="2"/>
+          <path d="M12 24 Q16 14 20 20 Q24 26 28 16" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <circle cx="20" cy="20" r="3" fill="var(--accent)"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">AirWatch</div>
+        <div class="brand-sub">Biratnagar Corridor</div>
+      </div>
+    </div>
+
+    <div class="nav-section-label">MONITOR</div>
+    <a href="#" class="nav-item active" data-section="dashboard">
+      <span class="nav-icon">◉</span> Live Dashboard
+    </a>
+    <a href="#" class="nav-item" data-section="heatmap">
+      <span class="nav-icon">▦</span> Heatmap
+    </a>
+    <a href="#" class="nav-item" data-section="timeline">
+      <span class="nav-icon">◌</span> 24hr Timeline
+    </a>
+
+    <div class="nav-section-label">COMMUNITY</div>
+    <a href="#" class="nav-item" data-section="report">
+      <span class="nav-icon">⊕</span> Report Incident
+    </a>
+    <a href="#" class="nav-item" data-section="authority">
+      <span class="nav-icon">⚡</span> Alert Authority
+    </a>
+    <a href="#" class="nav-item" data-section="sensor">
+      <span class="nav-icon">⊘</span> Get a Sensor
+    </a>
+
+    <div class="sidebar-footer">
+      <div class="sensor-status-badge">
+        <span class="pulse-dot"></span>
+        <span>Your sensor: <strong>Online</strong></span>
+      </div>
+      <div class="sidebar-coords">27.4833°N · 87.2667°E</div>
+    </div>
+  </nav>
+
+  <!-- HAMBURGER -->
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ===== SECTION: DASHBOARD ===== -->
+    <section class="section active" id="sec-dashboard">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Live Detection</h1>
+          <p class="section-sub">Real-time air quality · Updated every 30s · <span class="live-badge">● LIVE</span></p>
+        </div>
+        <div class="header-time" id="headerTime"></div>
+      </div>
+
+      <!-- AQI HERO -->
+      <div class="aqi-hero-grid">
+        <div class="aqi-main-card" id="aqiMainCard">
+          <div class="aqi-label">YOUR ZONE AQI</div>
+          <div class="aqi-dial-wrap">
+            <canvas id="aqiDial" width="220" height="220"></canvas>
+            <div class="aqi-center-text">
+              <div class="aqi-number" id="aqiNumber">247</div>
+              <div class="aqi-category" id="aqiCategory">VERY UNHEALTHY</div>
+            </div>
+          </div>
+          <div class="aqi-meta">
+            <span>PM2.5: <strong id="pm25Val">198 µg/m³</strong></span>
+            <span>PM10: <strong id="pm10Val">312 µg/m³</strong></span>
+            <span>VOC: <strong id="vocVal">HIGH</strong></span>
+          </div>
+          <div class="aqi-trend" id="aqiTrend">
+            <span class="trend-arrow up">↑</span> Increasing · Was 181 at 1:00 AM
+          </div>
+        </div>
+
+        <div class="zone-cards-col">
+          <div class="zone-card" data-aqi="247">
+            <div class="zone-info">
+              <div class="zone-name">Khanar Zone-3</div>
+              <div class="zone-dist">200m from IP</div>
+            </div>
+            <div class="zone-aqi-pill danger">247</div>
+            <div class="zone-bar"><div class="zone-bar-fill danger" style="width:82%"></div></div>
+          </div>
+          <div class="zone-card" data-aqi="189">
+            <div class="zone-info">
+              <div class="zone-name">Duhabi Ward-4</div>
+              <div class="zone-dist">480m from IP</div>
+            </div>
+            <div class="zone-aqi-pill warning">189</div>
+            <div class="zone-bar"><div class="zone-bar-fill warning" style="width:63%"></div></div>
+          </div>
+          <div class="zone-card" data-aqi="142">
+            <div class="zone-info">
+              <div class="zone-name">Tankisinuwari</div>
+              <div class="zone-dist">720m from IP</div>
+            </div>
+            <div class="zone-aqi-pill moderate">142</div>
+            <div class="zone-bar"><div class="zone-bar-fill moderate" style="width:47%"></div></div>
+          </div>
+          <div class="zone-card" data-aqi="67">
+            <div class="zone-info">
+              <div class="zone-name">Itahari North</div>
+              <div class="zone-dist">2.1km from IP</div>
+            </div>
+            <div class="zone-aqi-pill moderate">67</div>
+            <div class="zone-bar"><div class="zone-bar-fill good" style="width:22%"></div></div>
+          </div>
+        </div>
+
+        <!-- POLLUTANTS PANEL -->
+        <div class="pollutant-panel">
+          <div class="panel-title">Pollutant Breakdown</div>
+          <div class="pollutant-list">
+            <div class="pollutant-item">
+              <div class="p-name">PM<sub>2.5</sub></div>
+              <div class="p-bar-wrap"><div class="p-bar" style="width:88%; background: var(--danger)"></div></div>
+              <div class="p-value danger-text">198 µg/m³</div>
+            </div>
+            <div class="pollutant-item">
+              <div class="p-name">PM<sub>10</sub></div>
+              <div class="p-bar-wrap"><div class="p-bar" style="width:95%; background: var(--danger)"></div></div>
+              <div class="p-value danger-text">312 µg/m³</div>
+            </div>
+            <div class="pollutant-item">
+              <div class="p-name">SO₂</div>
+              <div class="p-bar-wrap"><div class="p-bar" style="width:72%; background: var(--warning)"></div></div>
+              <div class="p-value warning-text">58 ppb</div>
+            </div>
+            <div class="pollutant-item">
+              <div class="p-name">NO₂</div>
+              <div class="p-bar-wrap"><div class="p-bar" style="width:61%; background: var(--warning)"></div></div>
+              <div class="p-value warning-text">94 ppb</div>
+            </div>
+            <div class="pollutant-item">
+              <div class="p-name">VOC</div>
+              <div class="p-bar-wrap"><div class="p-bar" style="width:80%; background: var(--danger)"></div></div>
+              <div class="p-value danger-text">HIGH</div>
+            </div>
+            <div class="pollutant-item">
+              <div class="p-name">CO</div>
+              <div class="p-bar-wrap"><div class="p-bar" style="width:44%; background: var(--accent)"></div></div>
+              <div class="p-value">12 ppm</div>
+            </div>
+          </div>
+
+          <div class="who-note">
+            <span class="who-icon">⚕</span>
+            WHO 24h PM2.5 safe limit: <strong>15 µg/m³</strong><br/>
+            Current level is <strong class="danger-text">13.2× above safe limit</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Tonight's Pollution Timeline</div>
+            <div class="chart-sub">PM2.5 concentration · Midnight Pattern Visible</div>
+          </div>
+          <div class="chart-legend">
+            <span class="legend-dot" style="background:var(--danger)"></span> PM2.5
+            <span class="legend-dot" style="background:var(--warning); margin-left:12px"></span> PM10 (÷2)
+            <span class="legend-dot" style="background:var(--accent); margin-left:12px"></span> WHO Limit
+          </div>
+        </div>
+        <canvas id="timelineChart" height="100"></canvas>
+        <div class="chart-annotation">
+          <div class="annotation-pin" style="left: 67%">
+            <div class="pin-label">2:18 AM<br/>Filter OFF spike</div>
+            <div class="pin-line"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMMUNITY REPORTS STRIP -->
+      <div class="reports-strip">
+        <div class="strip-header">
+          <div class="strip-title">Live Community Reports</div>
+          <div class="strip-count" id="reportCount">18 reports tonight</div>
+        </div>
+        <div class="reports-scroll" id="reportsScroll">
+          <!-- dynamically populated -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== SECTION: HEATMAP ===== -->
+    <section class="section" id="sec-heatmap">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Pollution Heatmap</h1>
+          <p class="section-sub">Community-sourced scent trails · Permanent record</p>
+        </div>
+        <div class="heatmap-controls">
+          <button class="ctrl-btn active" onclick="setHeatmapTime('night')">2AM–5AM</button>
+          <button class="ctrl-btn" onclick="setHeatmapTime('morning')">5AM–9AM</button>
+          <button class="ctrl-btn" onclick="setHeatmapTime('day')">Full Day</button>
+        </div>
+      </div>
+
+      <div class="heatmap-layout">
+        <div class="heatmap-container">
+          <div class="heatmap-overlay-label">Biratnagar–Itahari Industrial Corridor</div>
+          <canvas id="heatmapCanvas" width="700" height="500"></canvas>
+          <div class="heatmap-legend-bar">
+            <div class="legend-gradient"></div>
+            <div class="legend-labels">
+              <span>Clean</span><span>Moderate</span><span>Unhealthy</span><span>Hazardous</span>
+            </div>
+          </div>
+          <!-- Factory markers -->
+          <div class="factory-marker" style="left:38%; top:42%" title="Steel Rolling Mill A">
+            <div class="factory-dot"></div>
+            <div class="factory-label">Mill-A</div>
+          </div>
+          <div class="factory-marker" style="left:52%; top:35%" title="Plastic Recycling Unit">
+            <div class="factory-dot"></div>
+            <div class="factory-label">Plastics</div>
+          </div>
+          <div class="factory-marker" style="left:45%; top:55%" title="Textile Giant">
+            <div class="factory-dot"></div>
+            <div class="factory-label">Textile</div>
+          </div>
+          <!-- Neighborhood markers -->
+          <div class="hood-marker" style="left:30%; top:58%">🏘 Khanar</div>
+          <div class="hood-marker" style="left:20%; top:38%">🏘 Duhabi</div>
+          <div class="hood-marker" style="left:62%; top:65%">🏘 Tankisinuwari</div>
+        </div>
+
+        <div class="heatmap-sidebar">
+          <div class="hmap-stat-card">
+            <div class="hmap-stat-label">Peak Hour Tonight</div>
+            <div class="hmap-stat-value danger-text">2:18 AM</div>
+            <div class="hmap-stat-sub">Worst pollution detected</div>
+          </div>
+          <div class="hmap-stat-card">
+            <div class="hmap-stat-label">Reports This Week</div>
+            <div class="hmap-stat-value">247</div>
+            <div class="hmap-stat-sub">From 89 unique sensors</div>
+          </div>
+          <div class="hmap-stat-card">
+            <div class="hmap-stat-label">Most Affected Zone</div>
+            <div class="hmap-stat-value warning-text">Khanar Z-3</div>
+            <div class="hmap-stat-sub">Avg AQI 218 (midnight)</div>
+          </div>
+          <div class="hmap-stat-card">
+            <div class="hmap-stat-label">Pattern Confidence</div>
+            <div class="hmap-stat-value accent-text">94%</div>
+            <div class="hmap-stat-sub">Midnight spike consistent<br/>for 18 consecutive nights</div>
+          </div>
+
+          <div class="pattern-alert-box">
+            <div class="pa-title">⚠ Midnight Pattern Detected</div>
+            <p>AQI spikes between <strong>1:45 AM – 4:30 AM</strong> for 18 of the last 21 nights, strongly correlating with reduced electricity consumption at nearby industrial plots. Pattern archived as evidence.</p>
+            <button class="btn-secondary" onclick="showSection('authority')">Report to DoE →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION: TIMELINE ===== -->
+    <section class="section" id="sec-timeline">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">24-Hour Timeline</h1>
+          <p class="section-sub">Hourly breakdown · Spot the midnight anomaly</p>
+        </div>
+      </div>
+
+      <div class="timeline-wrap">
+        <div class="hour-grid" id="hourGrid">
+          <!-- populated by JS -->
+        </div>
+
+        <div class="timeline-chart-card">
+          <canvas id="hourlyBarChart" height="120"></canvas>
+        </div>
+
+        <div class="timeline-insight">
+          <div class="insight-icon">🔍</div>
+          <div class="insight-content">
+            <div class="insight-title">Pattern Analysis</div>
+            <p>The 24-hour data reveals a clear <strong>nocturnal pollution cycle</strong>. AQI drops to baseline (~45) between 8AM–10PM when factories operate normally with filtration. A sharp spike begins consistently at <strong>1:45 AM</strong>, peaks around <strong>2:30–3:00 AM</strong> (reaching 280+ AQI), then gradually dissipates before dawn. This 18-night pattern is statistically significant (p &lt; 0.001) and has been archived as admissible community evidence.</p>
+            <div class="insight-tags">
+              <span class="tag danger">Midnight Spike</span>
+              <span class="tag warning">18-Night Pattern</span>
+              <span class="tag">Archived Evidence</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION: REPORT ===== -->
+    <section class="section" id="sec-report">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Report an Incident</h1>
+          <p class="section-sub">Your observation creates a timestamped, GPS-tagged digital record</p>
+        </div>
+      </div>
+
+      <div class="report-layout">
+        <div class="report-form-card">
+          <div class="form-step active" id="step1">
+            <div class="step-num">01</div>
+            <div class="step-label">What do you detect?</div>
+            <div class="smell-grid">
+              <button class="smell-btn" onclick="selectSmell(this, 'Burnt Rubber')">🔥 Burnt Rubber</button>
+              <button class="smell-btn" onclick="selectSmell(this, 'Chemical / Acidic')">⚗ Chemical/Acidic</button>
+              <button class="smell-btn" onclick="selectSmell(this, 'Black Smoke')">🌑 Black Smoke</button>
+              <button class="smell-btn" onclick="selectSmell(this, 'Sulfur / Rotten Egg')">💨 Sulfur/Rotten Egg</button>
+              <button class="smell-btn" onclick="selectSmell(this, 'Plastic Burning')">🏭 Plastic Burning</button>
+              <button class="smell-btn" onclick="selectSmell(this, 'Eye Irritation')">👁 Eye Irritation</button>
+            </div>
+          </div>
+
+          <div class="form-step" id="step2">
+            <div class="step-num">02</div>
+            <div class="step-label">Intensity</div>
+            <div class="intensity-slider-wrap">
+              <input type="range" min="1" max="5" value="3" class="intensity-slider" id="intensitySlider" oninput="updateIntensity(this.value)">
+              <div class="intensity-labels">
+                <span>Faint</span><span>Moderate</span><span>Choking</span>
+              </div>
+              <div class="intensity-display" id="intensityDisplay">Moderate (3/5)</div>
+            </div>
+          </div>
+
+          <div class="form-step" id="step3">
+            <div class="step-num">03</div>
+            <div class="step-label">Direction of source (optional)</div>
+            <div class="compass-wrap">
+              <div class="compass" id="compass">
+                <div class="compass-ring">
+                  <span class="compass-dir" style="top:2px; left:50%; transform:translateX(-50%)">N</span>
+                  <span class="compass-dir" style="right:2px; top:50%; transform:translateY(-50%)">E</span>
+                  <span class="compass-dir" style="bottom:2px; left:50%; transform:translateX(-50%)">S</span>
+                  <span class="compass-dir" style="left:2px; top:50%; transform:translateY(-50%)">W</span>
+                  <div class="compass-needle" id="compassNeedle"></div>
+                  <div class="compass-center"></div>
+                </div>
+              </div>
+              <div class="compass-hint">Tap to set wind direction</div>
+            </div>
+          </div>
+
+          <div class="form-step" id="step4">
+            <div class="step-num">04</div>
+            <div class="step-label">Add a note or voice memo (optional)</div>
+            <textarea class="report-textarea" placeholder="e.g. 'My son woke up coughing. Strong smell from the north chimney...'"></textarea>
+          </div>
+
+          <div class="report-meta-bar">
+            <div class="meta-item">
+              <span class="meta-icon">📍</span>
+              <span>Khanar, Ward-3 · Auto-detected</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-icon">⏱</span>
+              <span id="reportTime">Loading...</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-icon">🔒</span>
+              <span>Anonymous by default</span>
+            </div>
+          </div>
+
+          <button class="btn-report-submit" onclick="submitReport()">
+            <span class="submit-icon">⊕</span>
+            Submit Report & Join the Scent Trail
+          </button>
+
+          <div class="submit-note">Your report will be combined with neighbours' data to build evidence. Timestamp: <strong id="submitTimestamp"></strong></div>
+        </div>
+
+        <div class="report-sidebar">
+          <div class="neighbor-reports-card">
+            <div class="nr-title">Neighbours Reporting Now</div>
+            <div class="nr-feed" id="nrFeed">
+              <!-- JS populated -->
+            </div>
+          </div>
+          <div class="scent-trail-card">
+            <div class="st-title">Tonight's Scent Trail</div>
+            <canvas id="scentTrailMini" width="280" height="180"></canvas>
+            <div class="st-count"><strong id="scentCount">18</strong> reports forming the trail</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION: AUTHORITY ===== -->
+    <section class="section" id="sec-authority">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Alert Authority</h1>
+          <p class="section-sub">One tap sends a complete, data-backed evidence package</p>
+        </div>
+      </div>
+
+      <div class="authority-layout">
+        <div class="evidence-package">
+          <div class="pkg-title">Evidence Package — Auto-compiled</div>
+          <div class="pkg-items">
+            <div class="pkg-item done">
+              <span class="pkg-check">✓</span>
+              <div>
+                <div class="pkg-item-title">18-Night AQI Data Log</div>
+                <div class="pkg-item-sub">Timestamped sensor readings with GPS coordinates</div>
+              </div>
+            </div>
+            <div class="pkg-item done">
+              <span class="pkg-check">✓</span>
+              <div>
+                <div class="pkg-item-title">Community Incident Reports (247 total)</div>
+                <div class="pkg-item-sub">Anonymous reports from 89 verified residents</div>
+              </div>
+            </div>
+            <div class="pkg-item done">
+              <span class="pkg-check">✓</span>
+              <div>
+                <div class="pkg-item-title">Midnight Spike Pattern Analysis</div>
+                <div class="pkg-item-sub">Statistical report: 1:45–4:30 AM, 18 of 21 nights</div>
+              </div>
+            </div>
+            <div class="pkg-item done">
+              <span class="pkg-check">✓</span>
+              <div>
+                <div class="pkg-item-title">Heatmap — Affected Zones</div>
+                <div class="pkg-item-sub">Visual evidence of dispersion from industrial plots</div>
+              </div>
+            </div>
+            <div class="pkg-item done">
+              <span class="pkg-check">✓</span>
+              <div>
+                <div class="pkg-item-title">Health Impact Correlation</div>
+                <div class="pkg-item-sub">Reported respiratory symptoms linked to spike hours</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="authority-targets">
+          <div class="target-card" id="doe-card">
+            <div class="target-logo doe">DoE</div>
+            <div class="target-info">
+              <div class="target-name">Dept. of Environment</div>
+              <div class="target-contact">Kathmandu HQ · Regional Office Biratnagar</div>
+            </div>
+            <button class="btn-alert-send" onclick="sendAlert('DoE', this)">
+              Send Evidence Package
+            </button>
+          </div>
+          <div class="target-card">
+            <div class="target-logo ward">WO</div>
+            <div class="target-info">
+              <div class="target-name">Ward Office — Khanar</div>
+              <div class="target-contact">Local Gov · Ward-3 Officer</div>
+            </div>
+            <button class="btn-alert-send" onclick="sendAlert('Ward Office', this)">
+              Send Evidence Package
+            </button>
+          </div>
+          <div class="target-card">
+            <div class="target-logo media">📰</div>
+            <div class="target-info">
+              <div class="target-name">Press / Media Alert</div>
+              <div class="target-contact">Ratopati · Kantipur · Setopati</div>
+            </div>
+            <button class="btn-alert-send secondary" onclick="sendAlert('Media', this)">
+              Share Public Data
+            </button>
+          </div>
+          <div class="target-card">
+            <div class="target-logo ngo">NGO</div>
+            <div class="target-info">
+              <div class="target-name">Environmental NGOs</div>
+              <div class="target-contact">ENPHO · CLEAN Nepal · WWF Nepal</div>
+            </div>
+            <button class="btn-alert-send secondary" onclick="sendAlert('NGOs', this)">
+              Request Support
+            </button>
+          </div>
+        </div>
+
+        <div class="sent-log-card" id="sentLog">
+          <div class="log-title">📬 Sent Reports Log</div>
+          <div class="log-empty" id="logEmpty">No reports sent yet. Build your case first.</div>
+          <div id="logItems"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION: SENSOR ===== -->
+    <section class="section" id="sec-sensor">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Get a Sensor</h1>
+          <p class="section-sub">Every home is a data point. Every breath, a vote for clean air.</p>
+        </div>
+      </div>
+
+      <div class="sensor-layout">
+        <div class="sensor-hero-card">
+          <div class="sensor-3d">
+            <div class="sensor-device">
+              <div class="sensor-top">
+                <div class="sensor-led" id="sensorLed"></div>
+                <div class="sensor-screen">
+                  <div class="sensor-screen-aqi" id="deviceAqi">247</div>
+                  <div class="sensor-screen-label">AQI</div>
+                </div>
+              </div>
+              <div class="sensor-body">
+                <div class="sensor-vents">
+                  <div class="vent"></div><div class="vent"></div><div class="vent"></div>
+                  <div class="vent"></div><div class="vent"></div><div class="vent"></div>
+                </div>
+                <div class="sensor-brand-text">AirWatch Node</div>
+              </div>
+            </div>
+          </div>
+          <div class="sensor-specs">
+            <div class="spec-title">AirWatch Node v2.1</div>
+            <div class="spec-tagline">Community Air Monitor · Plug & Play</div>
+            <div class="spec-list">
+              <div class="spec-item"><span class="spec-check">✓</span> PM1.0, PM2.5, PM10 laser sensor</div>
+              <div class="spec-item"><span class="spec-check">✓</span> SO₂, NO₂, VOC, CO gas sensors</div>
+              <div class="spec-item"><span class="spec-check">✓</span> WiFi + GSM backup connectivity</div>
+              <div class="spec-item"><span class="spec-check">✓</span> GPS timestamp per reading</div>
+              <div class="spec-item"><span class="spec-check">✓</span> Solar + USB-C power</div>
+              <div class="spec-item"><span class="spec-check">✓</span> Open data — your readings, your rights</div>
+              <div class="spec-item"><span class="spec-check">✓</span> Auto-uploads to community heatmap</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sensor-options">
+          <div class="option-card featured">
+            <div class="option-badge">MOST POPULAR</div>
+            <div class="option-name">Community Grant</div>
+            <div class="option-price">FREE</div>
+            <div class="option-desc">Apply if your household income is below NPR 30,000/mo. Fully subsidised by the Clean Air Nepal Fund.</div>
+            <button class="btn-option" onclick="openSensorForm('grant')">Apply Now →</button>
+          </div>
+          <div class="option-card">
+            <div class="option-name">Purchase</div>
+            <div class="option-price">NPR 4,800</div>
+            <div class="option-desc">Own your sensor. One-time cost. Includes lifetime data hosting and community membership.</div>
+            <button class="btn-option outline" onclick="openSensorForm('buy')">Order Online →</button>
+          </div>
+          <div class="option-card">
+            <div class="option-name">Ward Office Pickup</div>
+            <div class="option-price">NPR 2,200</div>
+            <div class="option-desc">Subsidised. Pick up from Khanar Ward Office or Duhabi distribution center. Available now.</div>
+            <button class="btn-option outline" onclick="openSensorForm('pickup')">Reserve Slot →</button>
+          </div>
+        </div>
+
+        <div class="sensor-map-card">
+          <div class="smap-title">Sensor Coverage Map</div>
+          <div class="smap-sub">89 sensors active · 142 households pending</div>
+          <div class="coverage-visual">
+            <canvas id="coverageCanvas" width="500" height="200"></canvas>
+          </div>
+          <div class="coverage-stats">
+            <div class="cstat"><strong>89</strong><span>Active Sensors</span></div>
+            <div class="cstat"><strong>6.2km²</strong><span>Area Covered</span></div>
+            <div class="cstat"><strong>4,200+</strong><span>Families Protected</span></div>
+            <div class="cstat"><strong>142</strong><span>Sensors Requested</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SENSOR REQUEST MODAL -->
+      <div class="modal-overlay" id="sensorModal">
+        <div class="modal-card">
+          <button class="modal-close" onclick="closeSensorForm()">✕</button>
+          <div class="modal-title" id="modalTitle">Apply for Community Grant</div>
+          <div class="modal-form">
+            <input type="text" class="modal-input" placeholder="Full Name" />
+            <input type="text" class="modal-input" placeholder="Ward / Tole / House No." />
+            <input type="text" class="modal-input" placeholder="Phone Number" />
+            <select class="modal-input">
+              <option>Select Zone</option>
+              <option>Khanar Zone-1</option>
+              <option>Khanar Zone-2</option>
+              <option>Khanar Zone-3</option>
+              <option>Duhabi Ward-4</option>
+              <option>Tankisinuwari</option>
+            </select>
+            <button class="btn-modal-submit" onclick="submitSensorForm()">Submit Application</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- GLOBAL ALERT MODAL -->
+  <div class="global-alert-overlay" id="globalAlertOverlay">
+    <div class="global-alert-card" id="globalAlertCard">
+      <div class="ga-icon" id="gaIcon">✓</div>
+      <div class="ga-title" id="gaTitle">Report Submitted</div>
+      <div class="ga-body" id="gaBody">Your observation has been timestamped and added to the community scent trail.</div>
+      <button class="btn-ga-close" onclick="closeGlobalAlert()">Done</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
